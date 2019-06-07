@@ -36,6 +36,8 @@ struct {
     uint8_t up_t2_tidea;
     uint8_t dn_t1_t2;
     uint8_t dn_t2_tidea;
+    uint8_t up_offset;
+    uint8_t dn_offset;
 
     int64_t total;
 
@@ -132,8 +134,8 @@ int main (int argc,char* argv[]) {
         printf("up  : %+10.4f %+10.4f %+10.4f %+10.4f %+10.4f %+10.4f us\n",up[0],up[1],up[2],up[3],up[4],up[5]);
         printf("down: %+10.4f %+10.4f %+10.4f %+10.4f %+10.4f %+10.4f us\n",dn[0],dn[1],dn[2],dn[3],dn[4],dn[5]);
         printf("diff: %+10.4f %+10.4f %+10.4f %+10.4f %+10.4f %+10.4f us(uncalibrated, calculated on PC)\n",diff[0],diff[1],diff[2],diff[3],diff[4],diff[5]);
-        printf("AVGDiff(zero point calibrated):%10.4f  zeroCalibration:%10.4f  ",results.diff/262144.f,results.zero_calib/262144.f);
-        printf("t1/t2:%5.3f %5.3f  t2/tidea:%5.3f %5.3f  4Mcali:%f\n",results.up_t1_t2/128.f,results.dn_t1_t2/128.f,results.up_t2_tidea/128.f,results.dn_t2_tidea/128.f,results.calibration/65536.f);
+        printf("AVGDiff(zero calibrated):%10.4f  zeroCali:%10.4f  ",results.diff/262144.f,results.zero_calib/262144.f);
+        printf("t1/t2:%5.3f %5.3f  t2/tidea:%5.3f %5.3f offset:%2X %2X  4Mcali:%f\n",results.up_t1_t2/128.f,results.dn_t1_t2/128.f,results.up_t2_tidea/128.f,results.dn_t2_tidea/128.f,results.up_offset,results.dn_offset,results.calibration/65536.f);
         printf("total: %f   => %f L\n",results.total/262144.f,results.total/262144.f/scale);
 
         time_t timer;

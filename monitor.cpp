@@ -8,15 +8,9 @@
 
 #include <pthread.h>
 
-#include <opencv2/opencv.hpp>
-
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
 
 #include <cmath>
 
-using namespace cv;
 
 using namespace std;
 
@@ -81,55 +75,11 @@ void syncFrame(int fd) {
     }
 }
 
-Mat getImg(double num){
-    Mat meter = Mat::zeros(textheight + yblank * 2 + redundant * 2, 8*(textwidth+xblank), CV_8UC3);
-    for (int i = 5; i < 8; i++) {
-        rectangle(meter,Point((textwidth + xblank)* i+xblank/4,0),Point((textwidth + xblank)* i+xblank/4*3+textwidth,textheight + yblank * 2 + redundant * 2),Scalar(0, 0, 255),FILLED);
-    }
-    if (num < 0)
-        num = 0;
-    int inte[8];
-    float frac[8];
-    for (int i = 7; i >= 0; i--) {
-        inte[i] = ((int) num) % 10;
-        frac[i] = num - (int) num;
-        num /= 10;
-    }
-    for (int i = 6; i >= 0; i--) {
-        if (inte[i + 1] == 9)
-            frac[i] = frac[i + 1];
-        else
-            frac[i] = 0;
-    }
-    for (int i = 0; i < 8; i++) {
-        char ch[] = "0";
-
-        int move = frac[i] * (textheight+yblank) + 4;
-        ch[0] = (inte[i] + 9) % 10 + '0';
-        putText(meter, ch, Point((textwidth + xblank)* i+xblank/2, redundant - move), FONT_HERSHEY_SIMPLEX,3, Scalar(255, 255, 255),
-                thickness, 16);
-        ch[0] = (inte[i]) % 10 + '0';
-        putText(meter, ch, Point((textwidth + xblank)* i+xblank/2, redundant + textheight + yblank - move ), FONT_HERSHEY_SIMPLEX, 3,
-                Scalar(255, 255, 255), thickness, 16);
-        ch[0] = (inte[i] + 1) % 10 + '0';
-        putText(meter, ch, Point((textwidth + xblank)* i+xblank/2, redundant + textheight *2 + yblank * 2 - move ),
-                FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 255, 255), thickness, 16);
-        ch[0] = (inte[i] + 2) % 10 + '0';
-        putText(meter, ch, Point((textwidth + xblank)* i+xblank/2, redundant + textheight *3 + yblank * 3 - move ),
-                FONT_HERSHEY_SIMPLEX, 3, Scalar(255, 255, 255), thickness, 16);
-    }
-
-
-    resize(meter, meter, cv::Size(), 0.3, 0.3, INTER_LINEAR );
-
-    return meter;
-}
-
 
 int main (int argc,char* argv[]) {
 
     const char *sp_path = (argc > 1) ? argv[1] : "/dev/tty.usbserial";
-    const char *para2 = (argc > 2) ? argv[2] : "default";
+    const char *para2 = (argc > 2) ? argv[2] : 0;
 
     time_t timer;
     char timeStr[50];
@@ -138,14 +88,19 @@ int main (int argc,char* argv[]) {
     tm_info = localtime(&timer);
     strftime(timeStr, 26, "_%F %H-%M-%S.txt", tm_info);
 
-    char filename[100] = {0};
-    strcpy(filename,para2);
-    strcat(filename,timeStr);
 
-    FILE *file = fopen(filename,"w");
-    if(file == nullptr){
-        printf("Error opening file %s",filename);
-        exit(-1);
+
+    FILE *file = 0;
+    if(para2) {
+        char filename[100] = {0};
+        strcpy(filename,para2);
+        strcat(filename,timeStr);
+        
+        file = fopen(filename, "w");
+        if (file == nullptr) {
+            printf("Error opening file %s", filename);
+            exit(-1);
+        }
     }
 
 
@@ -197,10 +152,7 @@ int main (int argc,char* argv[]) {
         cout << "pthread_create error: error_code=" << ret << endl;
         exit(ret);
     }
-//    WINDOW *w = initscr();
-//    endwin();
-////    cbreak();
-////    nodelay(w, TRUE);
+
 
     for (int i = 0;; i++) {
 
@@ -272,26 +224,25 @@ int main (int argc,char* argv[]) {
             printf("%02x ",((unsigned char *)&results)[i]);
         printf("\n\n");
 
-        static char fileBuf[2000];
+        if(file) {
+            static char fileBuf[2000];
+            sprintf(fileBuf,
+                    "%015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %s\n",
+                    up[0], up[1], up[2], up[3], up[4], up[5], dn[0], dn[1], dn[2], dn[3], dn[4], dn[5],
+                    results.diff / 262144.f, results.zero_calib / 262144.f,
+                    results.up_t1_t2 / 128.f, results.dn_t1_t2 / 128.f, results.up_t2_tidea / 128.f,
+                    results.dn_t2_tidea / 128.f,
+                    results.calibration / 65536.f, results.total, timeStr);
 
-        sprintf(fileBuf,"%015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %015.7f %s\n",
-                up[0],up[1],up[2],up[3],up[4],up[5],dn[0],dn[1],dn[2],dn[3],dn[4],dn[5],
-                results.diff/262144.f,results.zero_calib/262144.f,
-                results.up_t1_t2/128.f,results.dn_t1_t2/128.f,results.up_t2_tidea/128.f,results.dn_t2_tidea/128.f,
-                results.calibration/65536.f,results.total,timeStr);
-
-        puts(fileBuf);
-        fputs(fileBuf,file);
-
-        if(shot){
-            strcpy(out3,out2);
-            strcpy(out2,out1);
-            shot = 0;
+            puts(fileBuf);
+            fputs(fileBuf, file);
         }
 
-        imshow("meter", getImg(results.total));
-        if(waitKey(1)>0)
-            ;
+        if (shot) {
+            strcpy(out3, out2);
+            strcpy(out2, out1);
+            shot = 0;
+        }
 
     }
 }
