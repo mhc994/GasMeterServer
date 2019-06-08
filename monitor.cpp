@@ -3,12 +3,11 @@
 #include <unistd.h>
 #include <sys/termios.h>
 #include <sys/ioctl.h>
-#include <IOKit/serial/ioss.h>
 #include <time.h>
 
 #include <pthread.h>
 
-
+#include <cstring>
 #include <cmath>
 
 
@@ -71,7 +70,8 @@ void syncFrame(int fd) {
     while (a != 0xbb) {
         long l = read(fd, &a, 1);
         if (l != -1)
-            printf("sync:read %ld char: %x \n", l, a);
+            //printf("sync:read %ld char: %x \n", l, a);
+            printf("*");
     }
 }
 
@@ -170,10 +170,10 @@ int main (int argc,char* argv[]) {
                 if (results.head1 == 0x55 && results.head2 == 0xaa && results.end1 == 0x66 && results.end2 == 0xbb)
                     break;
                 else {
-                    printf("\ninvalid frame: read %ld Bytes:\n", sizeof(results));
-                    for(int i=0;i< sizeof(results);i++)
-                        printf("%02x ",((unsigned char *)&results)[i]);
-                    printf("\n");
+                    //printf("\ninvalid frame: read %ld Bytes:\n", sizeof(results));
+                    //for(int i=0;i< sizeof(results);i++)
+                    //    printf("%02x ",((unsigned char *)&results)[i]);
+                    //printf("\n");
                     syncFrame(fd);
                     readCount = 0;
                 }
@@ -183,7 +183,8 @@ int main (int argc,char* argv[]) {
         float up[] = {results.up1/262144.f,results.up2/262144.f,results.up3/262144.f,results.up4/262144.f,results.up5/262144.f,results.up6/262144.f};
         float dn[] = {results.dn1/262144.f,results.dn2/262144.f,results.dn3/262144.f,results.dn4/262144.f,results.dn5/262144.f,results.dn6/262144.f};
         float diff[] = {up[0]-dn[0],up[1]-dn[1],up[2]-dn[2],up[3]-dn[3],up[4]-dn[4],up[5]-dn[5]};
-        system("clear");
+        
+	system("clear");
         //puts(logo);
 
         puts(out3);
@@ -217,8 +218,6 @@ int main (int argc,char* argv[]) {
 
 
 
-
-
         printf("\n%ld Bytes:", sizeof(results));
         for(int i=0;i< sizeof(results);i++)
             printf("%02x ",((unsigned char *)&results)[i]);
@@ -247,14 +246,6 @@ int main (int argc,char* argv[]) {
     }
 }
 
-
-//            system("clear");
-//            printf("\033[0m[Heat Meter]\n");
-//            printf("\033[1;35;40mID:0x%x 累计热量:%7.4f kWh   累计暖水量:%7.4f m^3   进水温度:%3.1f°C   回水温度:%3.1f°C\n",
-//                       addr1, data1.accu_Heat, data1.accu_Flow,  data1.T_Display, data1.T_return_Display);
-
-//            printf("\033[0m[Water Meter]\n");
-//            printf("\033[1;32;40mID:0x%x 累计流量:%7.4f m^3   瞬时流量:%7.4f m^3/h\n",addr3,data3.accu_Flow,data3.inst_Flow);
 
 ////    转义序列以ESC(\033)开头.  \033[显示方式;前景色;背景色m
 ////    显示方式:0（默认值）、1（高亮）、22（非粗体）、4（下划线）、24（非下划线）、5（闪烁）、25（非闪烁）、7（反显）、27（非反显）
