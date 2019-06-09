@@ -19,9 +19,11 @@ int fd=-1;
 void* waitkey(void* args)
 {
     while(1){
-        shot=cin.get();
+        char ch = cin.get();
         if(fd>0)
-            write(fd,(unsigned char*)&shot,1);
+            write(fd,(unsigned char*)&ch,1);
+        if(ch == 's')
+            shot = 1;
     }
 }
 
