@@ -14,19 +14,18 @@
 using namespace std;
 
 volatile char shot=0;
-const int yblank=10, redundant = 15,textheight=72,textwidth=60,xblank = 60,thickness=8;
+int fd=-1;
 
 void* waitkey(void* args)
 {
     while(1){
         shot=cin.get();
+        if(fd>0)
+            write(fd,(unsigned char*)&shot,1);
     }
 }
 
 const char* logo = " _    _ _ _                             _         _____             __  __      _            \n| |  | | | |                           (_)       / ____|           |  \\/  |    | |           \n| |  | | | |_ _ __ __ _ ___  ___  _ __  _  ___  | |  __  __ _ ___  | \\  / | ___| |_ ___ _ __ \n| |  | | | __| '__/ _` / __|/ _ \\| '_ \\| |/ __| | | |_ |/ _` / __| | |\\/| |/ _ \\ __/ _ \\ '__|\n| |__| | | |_| | | (_| \\__ \\ (_) | | | | | (__  | |__| | (_| \\__ \\ | |  | |  __/ ||  __/ |   \n \\____/|_|\\__|_|  \\__,_|___/\\___/|_| |_|_|\\___|  \\_____|\\__,_|___/ |_|  |_|\\___|\\__\\___|_|   ";
-
-//const float scale = 24.67;// 1.48 -- 60mL
-const float scale = 17.5157;
 
 #pragma pack (1)
 struct {
@@ -104,7 +103,7 @@ int main (int argc,char* argv[]) {
     }
 
 
-    int fd = open(sp_path, O_RDWR | O_NONBLOCK);
+    fd = open(sp_path, O_RDWR | O_NONBLOCK);
     if (fd < 0) {
         printf("open port failed");
         return fd;
