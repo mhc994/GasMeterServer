@@ -133,6 +133,7 @@ int main (int argc,char* argv[]) {
     tty.c_iflag     &=  ~(IXON | IXOFF | IXANY);// turn off s/w flow ctrl
     tty.c_lflag     &=  ~(ICANON | ECHO | ECHOE | ISIG); // make raw
     tty.c_oflag     &=  ~OPOST;              // make raw
+    tty.c_iflag     &=  ~(ICRNL|IGNCR|INLCR|ISTRIP|PARMRK|BRKINT|IGNBRK);  // raw mode, no converting 0x0d to 0x0a 
 
     /* Flush Port, then applies attributes */
     tcflush( fd, TCIFLUSH );
@@ -203,7 +204,13 @@ int main (int argc,char* argv[]) {
         sprintf(out1+strlen(out1),"diff: %+10.4f %+10.4f %+10.4f %+10.4f %+10.4f %+10.4f us(uncalibrated, calculated on PC)\n",diff[0],diff[1],diff[2],diff[3],diff[4],diff[5]);
         sprintf(out1+strlen(out1),"AVGDiff(zero point calibrated):%10.4f  zeroCalibration:%10.4f  ",results.diff/262144.f,results.zero_calib/262144.f);
         sprintf(out1+strlen(out1),"t1/t2:%5.3f %5.3f  t2/tidea:%5.3f %5.3f offset:%2X %2X  4Mcali:%f\n",results.up_t1_t2/128.f,results.dn_t1_t2/128.f,results.up_t2_tidea/128.f,results.dn_t2_tidea/128.f,results.up_offset,results.dn_offset,results.calibration/65536.f);
-        sprintf(out1+strlen(out1),"total: \033[1;32;40m%f L\033[0m   q: \033[1;32;40m%7.4f m^3/h\033[0m   ",results.total,q);
+
+	if(q>0)
+        	sprintf(out1+strlen(out1),"total: \033[1;32;40m%f L\033[0m   q: \033[1;32;40m%7.4f m^3/h\033[0m   ",results.total,q);
+	else
+
+        	sprintf(out1+strlen(out1),"total: \033[1;32;40m%f L\033[0m   q: \033[1;32;44m%7.4f m^3/h\033[0m   ",results.total,q);
+
         time(&timer);
         tm_info = localtime(&timer);
         strftime(out1+strlen(out1), 26, "%H:%M:%S", tm_info);
